@@ -8,6 +8,7 @@ use App\Models\Member;
 use App\Models\Trainer;
 use App\Models\TrainerMember;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Models\User;
@@ -85,7 +86,7 @@ class TrainerController extends ApiController
             return $this->jsonResponse(['message' => 'Trainer email already exists for this gym.'], 422, $request);
         }
 
-                $user = User::create([
+        $user = User::create([
             'tenant_id' => $tenantId,
             'name'      => $data['full_name'],
             'email'     => $data['email'],
@@ -169,7 +170,7 @@ class TrainerController extends ApiController
             ]);
         }
 
-                $trainerModel->update([
+        $trainerModel->update([
             'phone'            => $data['phone']            ?? $trainerModel->phone,
             'specialization'   => $data['specialization']   ?? $trainerModel->specialization,
             'experience_years' => $data['experience_years'] ?? $trainerModel->experience_years,
@@ -214,9 +215,34 @@ class TrainerController extends ApiController
         $trainerModel = Trainer::query()
             ->where('tenant_id', $tenantId)
             ->where('id', $trainer)
+            ->with(['employee', 'user'])
             ->firstOrFail();
 
-        $trainerModel->delete();
+        DB::transaction(function () use ($trainerModel, $tenantId) {
+            Member::query()
+                ->where('tenant_id', $tenantId)
+                ->where('assigned_trainer_id', $trainerModel->id)
+                ->update(['assigned_trainer_id' => null]);
+
+            TrainerMember::query()
+                ->where('tenant_id', $tenantId)
+                ->where('trainer_id', $trainerModel->id)
+                ->delete();
+
+            $employee = $trainerModel->employee;
+            $user = $trainerModel->user;
+
+            $trainerModel->delete();
+
+            if ($employee) {
+                $employee->delete();
+            }
+
+            if ($user) {
+                $user->roles()->detach();
+                $user->delete();
+            }
+        });
 
         return $this->jsonResponse(['message' => 'Trainer deleted.'], 200, $request);
     }

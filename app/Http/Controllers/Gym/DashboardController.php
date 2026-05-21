@@ -34,7 +34,7 @@ class DashboardController extends ApiController
         $activeMembers = Member::where('tenant_id', $tenantId)->where('status', 'active')->count();
         $trainersCount = Trainer::where('tenant_id', $tenantId)->count();
         $todayAttendance = Attendance::where('tenant_id', $tenantId)->whereDate('date', $today)->count();
-        $todayRevenue$totalRevenue = Payment::where('tenant_id', $tenantId)->where('payment_status', 'paid')->sum('final_amount');
+        $totalRevenue = Payment::where('tenant_id', $tenantId)->where('payment_status', 'paid')->sum('final_amount');
         $todayRevenue = Payment::where('tenant_id', $tenantId)->where('payment_status', 'paid')->whereDate('paid_at', $today)->sum('final_amount');
         $pendingPaymentsCount = Invoice::where('tenant_id', $tenantId)->whereIn('status', ['unpaid', 'overdue'])->count();
 
@@ -79,8 +79,7 @@ class DashboardController extends ApiController
                 ];
             });
 
-        $recentPayments$totalRevenue = Payment::where('tenant_id', $tenantId)->where('payment_status', 'paid')->sum('final_amount');
-        $todayRevenue = Payment::where('tenant_id', $tenantId)
+        $recentPayments = Payment::where('tenant_id', $tenantId)
             ->where('payment_status', 'paid')
             ->with(['member.user'])
             ->orderBy('paid_at', 'desc')
@@ -143,8 +142,7 @@ class DashboardController extends ApiController
 
         // 6. Revenue Chart (Last 7 Days)
         $sevenDaysAgo = $today->copy()->subDays(6);
-        $revenueTrend$totalRevenue = Payment::where('tenant_id', $tenantId)->where('payment_status', 'paid')->sum('final_amount');
-        $todayRevenue = Payment::where('tenant_id', $tenantId)
+        $revenueTrend = Payment::where('tenant_id', $tenantId)
             ->where('payment_status', 'paid')
             ->whereBetween('paid_at', [$sevenDaysAgo->startOfDay(), $today->copy()->endOfDay()])
             ->select(DB::raw('DATE(paid_at) as date'), DB::raw('SUM(final_amount) as amount'))
@@ -197,6 +195,7 @@ class DashboardController extends ApiController
         return $this->jsonResponse([
             'data' => [
                 'kpis' => [
+                    'total_revenue' => (float) $totalRevenue,
                     'total_members' => $totalMembers,
                     'active_members' => $activeMembers,
                     'trainers_count' => $trainersCount,

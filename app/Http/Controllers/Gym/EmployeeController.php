@@ -11,6 +11,7 @@ use App\Models\Trainer;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class EmployeeController extends ApiController
@@ -105,7 +106,7 @@ class EmployeeController extends ApiController
             'tenant_id' => $tenantId,
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make('password'), // Default password
+            'password' => Hash::make(Str::random(24)),
         ]);
 
         // Create employee record
