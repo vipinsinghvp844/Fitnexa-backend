@@ -41,6 +41,10 @@ return new class extends Migration
         if (DB::getDriverName() === 'mysql') {
             DB::statement('ALTER TABLE invoices MODIFY subscription_id BIGINT UNSIGNED NULL');
             DB::statement("ALTER TABLE invoices MODIFY status ENUM('pending', 'paid', 'unpaid', 'overdue', 'cancelled') NOT NULL DEFAULT 'pending'");
+        } elseif (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE invoices ALTER COLUMN subscription_id DROP NOT NULL');
+            DB::statement("ALTER TABLE invoices DROP CONSTRAINT IF EXISTS invoices_status_check");
+            DB::statement("ALTER TABLE invoices ADD CONSTRAINT invoices_status_check CHECK (status::text = ANY (ARRAY['pending'::text, 'paid'::text, 'unpaid'::text, 'overdue'::text, 'cancelled'::text]))");
         }
 
         Schema::table('payments', function (Blueprint $table) {
@@ -192,6 +196,10 @@ return new class extends Migration
         if (DB::getDriverName() === 'mysql') {
             DB::statement('ALTER TABLE invoices MODIFY subscription_id BIGINT UNSIGNED NOT NULL');
             DB::statement("ALTER TABLE invoices MODIFY status ENUM('pending', 'paid', 'overdue', 'cancelled') NOT NULL DEFAULT 'pending'");
+        } elseif (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE invoices ALTER COLUMN subscription_id SET NOT NULL');
+            DB::statement("ALTER TABLE invoices DROP CONSTRAINT IF EXISTS invoices_status_check");
+            DB::statement("ALTER TABLE invoices ADD CONSTRAINT invoices_status_check CHECK (status::text = ANY (ARRAY['pending'::text, 'paid'::text, 'overdue'::text, 'cancelled'::text]))");
         }
     }
 };
