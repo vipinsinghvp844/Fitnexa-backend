@@ -23,7 +23,7 @@ RUN composer dump-autoload --optimize --no-dev --no-scripts
 # ──────────────────────────────────────────────────────────────────
 # Stage 2 : Final runtime image
 # ──────────────────────────────────────────────────────────────────
-FROM php:8.3-fpm-alpine AS runtime
+FROM php:8.4-fpm-alpine AS runtime
 
 # Install system dependencies and PHP extensions
 RUN apk add --no-cache \
