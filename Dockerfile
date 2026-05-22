@@ -35,6 +35,7 @@ RUN apk add --no-cache \
     libzip-dev \
     zip \
     unzip \
+    && mkdir -p /var/log/supervisor \
     && docker-php-ext-install \
         pdo \
         pdo_pgsql \
