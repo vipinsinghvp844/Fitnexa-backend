@@ -116,6 +116,14 @@ return new class extends Migration
                 SET payments.tenant_id = invoices.tenant_id
                 WHERE payments.tenant_id IS NULL
             ');
+        } elseif (DB::getDriverName() === 'pgsql') {
+            DB::statement('
+                UPDATE payments
+                SET tenant_id = invoices.tenant_id
+                FROM invoices
+                WHERE invoices.id = payments.invoice_id
+                AND payments.tenant_id IS NULL
+            ');
         }
     }
 
