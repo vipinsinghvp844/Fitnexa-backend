@@ -19,6 +19,7 @@ chown -R www-data:www-data storage bootstrap/cache
 # ─── Cache config / routes for production ──────────────────────
 if [ "${APP_ENV}" = "production" ]; then
     echo "🔧 Caching config & routes for production..."
+    php artisan package:discover --force
     php artisan config:cache
     php artisan route:cache
     php artisan view:cache

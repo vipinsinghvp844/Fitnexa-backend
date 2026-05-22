@@ -18,7 +18,7 @@ RUN composer install \
 
 # Copy rest of the source and do full autoload
 COPY . .
-RUN composer dump-autoload --optimize --no-dev
+RUN composer dump-autoload --optimize --no-dev --no-scripts
 
 # ──────────────────────────────────────────────────────────────────
 # Stage 2 : Final runtime image
@@ -31,7 +31,7 @@ RUN apk add --no-cache \
     supervisor \
     bash \
     curl \
-    libpq-dev \
+    postgresql-dev \
     libzip-dev \
     zip \
     unzip \
