@@ -34,6 +34,9 @@ Route::post('email/verify', [AuthController::class, 'verifyEmail'])->middleware(
 
 Route::get('cms/content', [\App\Http\Controllers\PublicCmsController::class, 'index']);
 
+// Public platform config — returns feature flags + maintenance mode (no sensitive data)
+Route::get('platform/config', [\App\Http\Controllers\PublicPlatformConfigController::class, 'index']);
+
 // Public Gym Listing & Profile Pages
 Route::get('gyms', [\App\Http\Controllers\PublicGymController::class, 'index']);
 Route::get('gyms/{slug}', [\App\Http\Controllers\PublicGymController::class, 'show']);
@@ -108,7 +111,7 @@ Route::middleware(['jwt', 'auth.custom'])->group(function () {
 
     // Gym Routes - Require active SaaS subscription
     Route::prefix('gym')
-        ->middleware(['role:Gym Admin|Manager|Receptionist|Accountant', 'subscription'])
+        ->middleware(['role:Gym Admin|Manager|Receptionist|Accountant', 'subscription', 'maintenance'])
         ->group(function () {
             Route::get('dashboard', [GymDashboardController::class, 'index']);
 
@@ -128,13 +131,15 @@ Route::middleware(['jwt', 'auth.custom'])->group(function () {
             Route::put('staff/{employee}', [GymEmployeeController::class, 'update']);
             Route::delete('staff/{employee}', [GymEmployeeController::class, 'destroy']);
 
-            // Trainers (CRUD + assign members)
-            Route::get('trainers', [GymTrainerController::class, 'index']);
-            Route::post('trainers', [GymTrainerController::class, 'store']);
-            Route::get('trainers/{trainer}', [GymTrainerController::class, 'show']);
-            Route::put('trainers/{trainer}', [GymTrainerController::class, 'update']);
-            Route::delete('trainers/{trainer}', [GymTrainerController::class, 'destroy']);
-            Route::post('trainers/{trainer}/assign-members', [GymTrainerController::class, 'assignMembers']);
+            // Trainers — gated by feature flag
+            Route::middleware('feature:enable_trainers')->group(function () {
+                Route::get('trainers', [GymTrainerController::class, 'index']);
+                Route::post('trainers', [GymTrainerController::class, 'store']);
+                Route::get('trainers/{trainer}', [GymTrainerController::class, 'show']);
+                Route::put('trainers/{trainer}', [GymTrainerController::class, 'update']);
+                Route::delete('trainers/{trainer}', [GymTrainerController::class, 'destroy']);
+                Route::post('trainers/{trainer}/assign-members', [GymTrainerController::class, 'assignMembers']);
+            });
 
             // Attendance
             Route::get('attendance', [GymAttendanceController::class, 'index']);
@@ -163,14 +168,16 @@ Route::middleware(['jwt', 'auth.custom'])->group(function () {
                 Route::get('trainers', [GymReportController::class, 'trainers']);
             });
 
-            // Classes / Membership plans (list endpoints today)
-            Route::get('classes', [GymClassController::class, 'index']);
-            Route::post('classes', [GymClassController::class, 'store']);
-            Route::get('classes/{class}', [GymClassController::class, 'show']);
-            Route::put('classes/{id}', [GymClassController::class, 'update']);
-            Route::delete('classes/{id}', [GymClassController::class, 'destroy']);
-            Route::post('classes/{class}/book', [GymClassController::class, 'book']);
-            Route::put('classes/bookings/{bookingId}/status', [GymClassController::class, 'updateBookingStatus']);
+            // Classes — gated by feature flag
+            Route::middleware('feature:enable_classes')->group(function () {
+                Route::get('classes', [GymClassController::class, 'index']);
+                Route::post('classes', [GymClassController::class, 'store']);
+                Route::get('classes/{class}', [GymClassController::class, 'show']);
+                Route::put('classes/{id}', [GymClassController::class, 'update']);
+                Route::delete('classes/{id}', [GymClassController::class, 'destroy']);
+                Route::post('classes/{class}/book', [GymClassController::class, 'book']);
+                Route::put('classes/bookings/{bookingId}/status', [GymClassController::class, 'updateBookingStatus']);
+            });
             Route::get('membership-plans', [GymMembershipPlanController::class, 'index']);
             Route::post('membership-plans', [GymMembershipPlanController::class, 'store']);
             Route::put('membership-plans/{id}', [GymMembershipPlanController::class, 'update']);
