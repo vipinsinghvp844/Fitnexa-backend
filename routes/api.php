@@ -101,6 +101,12 @@ Route::middleware(['jwt', 'auth.custom'])->group(function () {
             Route::put('settings/{group}', [SettingsController::class, 'update']);
             Route::post('settings/upload-media', [SettingsController::class, 'uploadMedia']);
 
+            // Notifications for Super Admin
+            Route::get('notifications', [\App\Http\Controllers\SuperAdmin\NotificationController::class, 'index']);
+            Route::get('notifications/counts', [\App\Http\Controllers\SuperAdmin\NotificationController::class, 'counts']);
+            Route::put('notifications/mark-all-read', [\App\Http\Controllers\SuperAdmin\NotificationController::class, 'markAllAsRead']);
+            Route::put('notifications/{id}/read', [\App\Http\Controllers\SuperAdmin\NotificationController::class, 'markAsRead']);
+
             // Support Tickets for Super Admin
             Route::get('support/tickets', [\App\Http\Controllers\SuperAdmin\SupportTicketController::class, 'index']);
             Route::get('support/tickets/{id}', [\App\Http\Controllers\SuperAdmin\SupportTicketController::class, 'show']);

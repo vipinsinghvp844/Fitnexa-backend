@@ -112,6 +112,12 @@ class AuthController extends ApiController
             'gym_name' => ['required', 'string', 'max:255'],
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone'    => ['nullable', 'string', 'max:50'],
+            'address'  => ['nullable', 'string', 'max:500'],
+            'city'     => ['nullable', 'string', 'max:255'],
+            'state'    => ['nullable', 'string', 'max:255'],
+            'country'  => ['nullable', 'string', 'max:255'],
+            'zip'      => ['nullable', 'string', 'max:50'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
@@ -128,10 +134,16 @@ class AuthController extends ApiController
                 }
 
                 $tenant = Tenant::create([
-                    'name'   => $data['gym_name'],
-                    'slug'   => $slug,
-                    'email'  => $data['email'],
-                    'status' => $autoApprove ? 'active' : 'pending',
+                    'name'    => $data['gym_name'],
+                    'slug'    => $slug,
+                    'email'   => $data['email'],
+                    'phone'   => $data['phone'] ?? null,
+                    'address' => $data['address'] ?? null,
+                    'city'    => $data['city'] ?? null,
+                    'state'   => $data['state'] ?? null,
+                    'country' => $data['country'] ?? null,
+                    'zip'     => $data['zip'] ?? null,
+                    'status'  => $autoApprove ? 'active' : 'pending',
                 ]);
 
                 $user = User::create([
